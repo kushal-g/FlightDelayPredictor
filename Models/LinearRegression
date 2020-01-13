@@ -1,0 +1,1257 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Untitled3.ipynb",
+      "provenance": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/kushal-g/FlightDelayPredictor/blob/master/Models/LinearRegression\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "Kq3fVKnqs_m5",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "import numpy as np"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "22JyaMH7tJQx",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "import pandas as pd"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "IIwHwKkvtNMv",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "from multiprocessing import Pool"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "hSq20_kFtP2c",
+        "colab_type": "code",
+        "outputId": "eb07f20c-9fd4-4505-c2b3-853b1adfe060",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 122
+        }
+      },
+      "source": [
+        "from google.colab import drive\n",
+        "drive.mount('/content/gdrive')\n"
+      ],
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Go to this URL in a browser: https://accounts.google.com/o/oauth2/auth?client_id=947318989803-6bn6qk8qdgf4n4g3pfee6491hc0brc4i.apps.googleusercontent.com&redirect_uri=urn%3aietf%3awg%3aoauth%3a2.0%3aoob&response_type=code&scope=email%20https%3a%2f%2fwww.googleapis.com%2fauth%2fdocs.test%20https%3a%2f%2fwww.googleapis.com%2fauth%2fdrive%20https%3a%2f%2fwww.googleapis.com%2fauth%2fdrive.photos.readonly%20https%3a%2f%2fwww.googleapis.com%2fauth%2fpeopleapi.readonly\n",
+            "\n",
+            "Enter your authorization code:\n",
+            "··········\n",
+            "Mounted at /content/gdrive\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "erxk_E1ltX7D",
+        "colab_type": "code",
+        "outputId": "4ce937be-9520-4656-8223-e5999b04ee60",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "cd /content/gdrive/My Drive/"
+      ],
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "/content/gdrive/My Drive\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab_type": "code",
+        "id": "qtDLNB6OgXaS",
+        "colab": {}
+      },
+      "source": [
+        "from sklearn.linear_model import LinearRegression"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "xWG8V3_Z6_lR",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "lr = LinearRegression()"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "KrQGtkaN7HIa",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "df = pd.read_csv(\"flights_cleaned_encoded.csv\",dtype={\"ORIGIN_AIRPORT\":object,\"DESTINATION_AIRPORT\":object,\"TAIL_NUMBER_BINNED\":int})"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "wp2nu9817mex",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "df = df.drop(\"Unnamed: 0\",axis=1)"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "9ecoaCll75aW",
+        "colab_type": "code",
+        "outputId": "fcfd3bb8-fd67-4562-8018-f44782706c77",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1000
+        }
+      },
+      "source": [
+        "for column in df.columns:\n",
+        "  print(column)"
+      ],
+      "execution_count": 10,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "YEAR\n",
+            "MONTH\n",
+            "DAY\n",
+            "DAY_OF_WEEK\n",
+            "AIRLINE\n",
+            "FLIGHT_NUMBER\n",
+            "TAIL_NUMBER\n",
+            "ORIGIN_AIRPORT\n",
+            "DESTINATION_AIRPORT\n",
+            "DEPARTURE_DELAY\n",
+            "TAXI_OUT\n",
+            "WHEELS_OFF\n",
+            "SCHEDULED_TIME\n",
+            "ELAPSED_TIME\n",
+            "AIR_TIME\n",
+            "DISTANCE\n",
+            "WHEELS_ON\n",
+            "TAXI_IN\n",
+            "ARRIVAL_DELAY\n",
+            "DIVERTED\n",
+            "CANCELLED\n",
+            "SCHEDULED_DEPARTURE\n",
+            "SCHEDULED_ARRIVAL\n",
+            "TAIL_NUMBER_BINNED\n",
+            "ORIGIN_AIRPORT_BINNED\n",
+            "DESTINATION_AIRPORT_BINNED\n",
+            "MONTH_1\n",
+            "MONTH_2\n",
+            "MONTH_3\n",
+            "MONTH_4\n",
+            "MONTH_5\n",
+            "MONTH_6\n",
+            "MONTH_7\n",
+            "MONTH_8\n",
+            "MONTH_9\n",
+            "MONTH_10\n",
+            "MONTH_11\n",
+            "MONTH_12\n",
+            "DAY_OF_WEEK_1\n",
+            "DAY_OF_WEEK_2\n",
+            "DAY_OF_WEEK_3\n",
+            "DAY_OF_WEEK_4\n",
+            "DAY_OF_WEEK_5\n",
+            "DAY_OF_WEEK_6\n",
+            "DAY_OF_WEEK_7\n",
+            "TAIL_NUMBER_0\n",
+            "TAIL_NUMBER_1\n",
+            "TAIL_NUMBER_2\n",
+            "TAIL_NUMBER_3\n",
+            "TAIL_NUMBER_4\n",
+            "TAIL_NUMBER_5\n",
+            "TAIL_NUMBER_6\n",
+            "TAIL_NUMBER_7\n",
+            "TAIL_NUMBER_8\n",
+            "TAIL_NUMBER_9\n",
+            "TAIL_NUMBER_10\n",
+            "TAIL_NUMBER_11\n",
+            "TAIL_NUMBER_12\n",
+            "TAIL_NUMBER_13\n",
+            "TAIL_NUMBER_14\n",
+            "TAIL_NUMBER_15\n",
+            "TAIL_NUMBER_16\n",
+            "TAIL_NUMBER_17\n",
+            "TAIL_NUMBER_18\n",
+            "TAIL_NUMBER_19\n",
+            "TAIL_NUMBER_20\n",
+            "TAIL_NUMBER_21\n",
+            "TAIL_NUMBER_22\n",
+            "TAIL_NUMBER_23\n",
+            "TAIL_NUMBER_24\n",
+            "TAIL_NUMBER_25\n",
+            "TAIL_NUMBER_26\n",
+            "TAIL_NUMBER_27\n",
+            "TAIL_NUMBER_28\n",
+            "TAIL_NUMBER_29\n",
+            "TAIL_NUMBER_30\n",
+            "TAIL_NUMBER_31\n",
+            "TAIL_NUMBER_32\n",
+            "TAIL_NUMBER_33\n",
+            "TAIL_NUMBER_34\n",
+            "TAIL_NUMBER_35\n",
+            "TAIL_NUMBER_36\n",
+            "TAIL_NUMBER_37\n",
+            "TAIL_NUMBER_38\n",
+            "TAIL_NUMBER_39\n",
+            "TAIL_NUMBER_40\n",
+            "TAIL_NUMBER_41\n",
+            "TAIL_NUMBER_42\n",
+            "TAIL_NUMBER_43\n",
+            "TAIL_NUMBER_44\n",
+            "TAIL_NUMBER_45\n",
+            "TAIL_NUMBER_46\n",
+            "ORIGIN_AIRPORT_1\n",
+            "ORIGIN_AIRPORT_2\n",
+            "ORIGIN_AIRPORT_3\n",
+            "ORIGIN_AIRPORT_4\n",
+            "ORIGIN_AIRPORT_5\n",
+            "ORIGIN_AIRPORT_6\n",
+            "ORIGIN_AIRPORT_7\n",
+            "ORIGIN_AIRPORT_8\n",
+            "ORIGIN_AIRPORT_9\n",
+            "ORIGIN_AIRPORT_10\n",
+            "ORIGIN_AIRPORT_11\n",
+            "ORIGIN_AIRPORT_12\n",
+            "ORIGIN_AIRPORT_13\n",
+            "ORIGIN_AIRPORT_14\n",
+            "ORIGIN_AIRPORT_15\n",
+            "ORIGIN_AIRPORT_16\n",
+            "ORIGIN_AIRPORT_17\n",
+            "ORIGIN_AIRPORT_18\n",
+            "ORIGIN_AIRPORT_19\n",
+            "ORIGIN_AIRPORT_20\n",
+            "ORIGIN_AIRPORT_21\n",
+            "ORIGIN_AIRPORT_22\n",
+            "ORIGIN_AIRPORT_23\n",
+            "ORIGIN_AIRPORT_24\n",
+            "ORIGIN_AIRPORT_25\n",
+            "ORIGIN_AIRPORT_26\n",
+            "DESTINATION_AIRPORT_1\n",
+            "DESTINATION_AIRPORT_2\n",
+            "DESTINATION_AIRPORT_3\n",
+            "DESTINATION_AIRPORT_4\n",
+            "DESTINATION_AIRPORT_5\n",
+            "DESTINATION_AIRPORT_6\n",
+            "DESTINATION_AIRPORT_7\n",
+            "DESTINATION_AIRPORT_8\n",
+            "DESTINATION_AIRPORT_9\n",
+            "DESTINATION_AIRPORT_10\n",
+            "DESTINATION_AIRPORT_11\n",
+            "DESTINATION_AIRPORT_12\n",
+            "DESTINATION_AIRPORT_13\n",
+            "DESTINATION_AIRPORT_14\n",
+            "DESTINATION_AIRPORT_15\n",
+            "DESTINATION_AIRPORT_16\n",
+            "DESTINATION_AIRPORT_17\n",
+            "DESTINATION_AIRPORT_18\n",
+            "DESTINATION_AIRPORT_19\n",
+            "DESTINATION_AIRPORT_20\n",
+            "DESTINATION_AIRPORT_21\n",
+            "DESTINATION_AIRPORT_22\n",
+            "DESTINATION_AIRPORT_23\n",
+            "DESTINATION_AIRPORT_24\n",
+            "DESTINATION_AIRPORT_25\n",
+            "SCHEDULED_DEPARTURE_(-0.001, 200.0]\n",
+            "SCHEDULED_DEPARTURE_(1000.0, 1200.0]\n",
+            "SCHEDULED_DEPARTURE_(1200.0, 1400.0]\n",
+            "SCHEDULED_DEPARTURE_(1400.0, 1600.0]\n",
+            "SCHEDULED_DEPARTURE_(1600.0, 1800.0]\n",
+            "SCHEDULED_DEPARTURE_(1800.0, 2000.0]\n",
+            "SCHEDULED_DEPARTURE_(200.0, 400.0]\n",
+            "SCHEDULED_DEPARTURE_(2000.0, 2200.0]\n",
+            "SCHEDULED_DEPARTURE_(2200.0, 2400.0]\n",
+            "SCHEDULED_DEPARTURE_(400.0, 600.0]\n",
+            "SCHEDULED_DEPARTURE_(600.0, 800.0]\n",
+            "SCHEDULED_DEPARTURE_(800.0, 1000.0]\n",
+            "SCHEDULED_ARRIVAL_(-0.001, 200.0]\n",
+            "SCHEDULED_ARRIVAL_(1000.0, 1200.0]\n",
+            "SCHEDULED_ARRIVAL_(1200.0, 1400.0]\n",
+            "SCHEDULED_ARRIVAL_(1400.0, 1600.0]\n",
+            "SCHEDULED_ARRIVAL_(1600.0, 1800.0]\n",
+            "SCHEDULED_ARRIVAL_(1800.0, 2000.0]\n",
+            "SCHEDULED_ARRIVAL_(200.0, 400.0]\n",
+            "SCHEDULED_ARRIVAL_(2000.0, 2200.0]\n",
+            "SCHEDULED_ARRIVAL_(2200.0, 2400.0]\n",
+            "SCHEDULED_ARRIVAL_(400.0, 600.0]\n",
+            "SCHEDULED_ARRIVAL_(600.0, 800.0]\n",
+            "SCHEDULED_ARRIVAL_(800.0, 1000.0]\n",
+            "AIRLINE_AA\n",
+            "AIRLINE_AS\n",
+            "AIRLINE_B6\n",
+            "AIRLINE_DL\n",
+            "AIRLINE_EV\n",
+            "AIRLINE_F9\n",
+            "AIRLINE_HA\n",
+            "AIRLINE_MQ\n",
+            "AIRLINE_NK\n",
+            "AIRLINE_OO\n",
+            "AIRLINE_UA\n",
+            "AIRLINE_US\n",
+            "AIRLINE_VX\n",
+            "AIRLINE_WN\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "PHuvAAED7-VL",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "X = df.drop([\"AIRLINE_AA\",\"SCHEDULED_ARRIVAL_(-0.001, 200.0]\",\"SCHEDULED_DEPARTURE_(-0.001, 200.0]\",\"DESTINATION_AIRPORT_1\",\"ORIGIN_AIRPORT_1\",\"TAIL_NUMBER_0\",\"DAY_OF_WEEK_1\",\"MONTH_1\",\"YEAR\", \"MONTH\", \"DAY_OF_WEEK\",\"DAY\",\"AIRLINE\", \"FLIGHT_NUMBER\", \"TAIL_NUMBER\", \"ORIGIN_AIRPORT\", \"DESTINATION_AIRPORT\", \"DEPARTURE_DELAY\", \"TAXI_OUT\", \"WHEELS_OFF\", \"SCHEDULED_TIME\", \"AIR_TIME\",\"TAXI_IN\", \"WHEELS_ON\", \"ARRIVAL_DELAY\", \"SCHEDULED_DEPARTURE\", \"SCHEDULED_ARRIVAL\", \"TAIL_NUMBER_BINNED\", \"ORIGIN_AIRPORT_BINNED\", \"DESTINATION_AIRPORT_BINNED\"] , axis=1)"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "PctspKuxAXbG",
+        "colab_type": "code",
+        "outputId": "806b0933-1b85-4ea8-a313-f4be8800f200",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 270
+        }
+      },
+      "source": [
+        "X.head()"
+      ],
+      "execution_count": 12,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>ELAPSED_TIME</th>\n",
+              "      <th>DISTANCE</th>\n",
+              "      <th>DIVERTED</th>\n",
+              "      <th>CANCELLED</th>\n",
+              "      <th>MONTH_2</th>\n",
+              "      <th>MONTH_3</th>\n",
+              "      <th>MONTH_4</th>\n",
+              "      <th>MONTH_5</th>\n",
+              "      <th>MONTH_6</th>\n",
+              "      <th>MONTH_7</th>\n",
+              "      <th>MONTH_8</th>\n",
+              "      <th>MONTH_9</th>\n",
+              "      <th>MONTH_10</th>\n",
+              "      <th>MONTH_11</th>\n",
+              "      <th>MONTH_12</th>\n",
+              "      <th>DAY_OF_WEEK_2</th>\n",
+              "      <th>DAY_OF_WEEK_3</th>\n",
+              "      <th>DAY_OF_WEEK_4</th>\n",
+              "      <th>DAY_OF_WEEK_5</th>\n",
+              "      <th>DAY_OF_WEEK_6</th>\n",
+              "      <th>DAY_OF_WEEK_7</th>\n",
+              "      <th>TAIL_NUMBER_1</th>\n",
+              "      <th>TAIL_NUMBER_2</th>\n",
+              "      <th>TAIL_NUMBER_3</th>\n",
+              "      <th>TAIL_NUMBER_4</th>\n",
+              "      <th>TAIL_NUMBER_5</th>\n",
+              "      <th>TAIL_NUMBER_6</th>\n",
+              "      <th>TAIL_NUMBER_7</th>\n",
+              "      <th>TAIL_NUMBER_8</th>\n",
+              "      <th>TAIL_NUMBER_9</th>\n",
+              "      <th>TAIL_NUMBER_10</th>\n",
+              "      <th>TAIL_NUMBER_11</th>\n",
+              "      <th>TAIL_NUMBER_12</th>\n",
+              "      <th>TAIL_NUMBER_13</th>\n",
+              "      <th>TAIL_NUMBER_14</th>\n",
+              "      <th>TAIL_NUMBER_15</th>\n",
+              "      <th>TAIL_NUMBER_16</th>\n",
+              "      <th>TAIL_NUMBER_17</th>\n",
+              "      <th>TAIL_NUMBER_18</th>\n",
+              "      <th>TAIL_NUMBER_19</th>\n",
+              "      <th>...</th>\n",
+              "      <th>DESTINATION_AIRPORT_21</th>\n",
+              "      <th>DESTINATION_AIRPORT_22</th>\n",
+              "      <th>DESTINATION_AIRPORT_23</th>\n",
+              "      <th>DESTINATION_AIRPORT_24</th>\n",
+              "      <th>DESTINATION_AIRPORT_25</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(1000.0, 1200.0]</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(1200.0, 1400.0]</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(1400.0, 1600.0]</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(1600.0, 1800.0]</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(1800.0, 2000.0]</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(200.0, 400.0]</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(2000.0, 2200.0]</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(2200.0, 2400.0]</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(400.0, 600.0]</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(600.0, 800.0]</th>\n",
+              "      <th>SCHEDULED_DEPARTURE_(800.0, 1000.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(1000.0, 1200.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(1200.0, 1400.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(1400.0, 1600.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(1600.0, 1800.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(1800.0, 2000.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(200.0, 400.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(2000.0, 2200.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(2200.0, 2400.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(400.0, 600.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(600.0, 800.0]</th>\n",
+              "      <th>SCHEDULED_ARRIVAL_(800.0, 1000.0]</th>\n",
+              "      <th>AIRLINE_AS</th>\n",
+              "      <th>AIRLINE_B6</th>\n",
+              "      <th>AIRLINE_DL</th>\n",
+              "      <th>AIRLINE_EV</th>\n",
+              "      <th>AIRLINE_F9</th>\n",
+              "      <th>AIRLINE_HA</th>\n",
+              "      <th>AIRLINE_MQ</th>\n",
+              "      <th>AIRLINE_NK</th>\n",
+              "      <th>AIRLINE_OO</th>\n",
+              "      <th>AIRLINE_UA</th>\n",
+              "      <th>AIRLINE_US</th>\n",
+              "      <th>AIRLINE_VX</th>\n",
+              "      <th>AIRLINE_WN</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>74.0</td>\n",
+              "      <td>318</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>152.0</td>\n",
+              "      <td>950</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>112.0</td>\n",
+              "      <td>672</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>59.0</td>\n",
+              "      <td>214</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>75.0</td>\n",
+              "      <td>224</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>...</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "<p>5 rows × 151 columns</p>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "   ELAPSED_TIME  DISTANCE  DIVERTED  ...  AIRLINE_US  AIRLINE_VX  AIRLINE_WN\n",
+              "0          74.0       318         0  ...           0           0           0\n",
+              "1         152.0       950         0  ...           0           0           0\n",
+              "2         112.0       672         0  ...           0           0           1\n",
+              "3          59.0       214         0  ...           0           0           0\n",
+              "4          75.0       224         0  ...           0           0           0\n",
+              "\n",
+              "[5 rows x 151 columns]"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 12
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "cbXY81I1AsNV",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "y = df[\"ARRIVAL_DELAY\"]"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "BL-fygUTA5R8",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "from sklearn.model_selection import train_test_split"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "sZaI8tH3A6WN",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "X_train,X_test,y_train, y_test = train_test_split(X, y, test_size=0.2,random_state=42)"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "xptZ_NC3BJGE",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "reg = lr.fit(X_train,y_train)"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "SdfpEueCDscE",
+        "colab_type": "code",
+        "outputId": "6c87640d-e5db-4ad1-d73a-4c7598bf595a",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "reg.score(X_test,y_test)"
+      ],
+      "execution_count": 17,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "0.09370518006756778"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 17
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "PHPjSD_tBUSX",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "predictions =lr.predict(X_test)"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "vsfYUD9glKeX",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "predictions = [int(round(prediction)) for prediction in predictions]"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "dnlEyv7tleNu",
+        "colab_type": "code",
+        "outputId": "0d13ceb7-da89-4702-a6d5-f0491ae00c26",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "len(predictions)"
+      ],
+      "execution_count": 20,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "100000"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 20
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "5EaI49vflshi",
+        "colab_type": "code",
+        "outputId": "85630e38-87f9-47b5-e7ca-d1f4f9fb1bcb",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "len(y_test)"
+      ],
+      "execution_count": 21,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "100000"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 21
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "kGCx2yYymAkV",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "y_test.reset_index(drop=True,inplace=True)"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "VVFR3YJfnnAM",
+        "colab_type": "code",
+        "outputId": "5844f025-0346-4485-d3ed-f09a2345c8e4",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "count = 0;\n",
+        "for x in range(0,100000):\n",
+        "  if(y_test[x]==predictions[x]):\n",
+        "    count=count+1\n",
+        "count"
+      ],
+      "execution_count": 23,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "2041"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 23
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "SnRGfoaan0IL",
+        "colab_type": "code",
+        "outputId": "a144cf90-5bab-45d6-d7f7-5675d8b955e8",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "2041*100/len(X_test)"
+      ],
+      "execution_count": 29,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "2.041"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 29
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "NSFmrXSgCi1T",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "import matplotlib as plt"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "2WokypLACqtW",
+        "colab_type": "code",
+        "outputId": "995939d2-16c1-4625-c6f5-18e0debdf350",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 282
+        }
+      },
+      "source": [
+        "plt.pyplot.scatter(y_test, predictions)"
+      ],
+      "execution_count": 31,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "<matplotlib.collections.PathCollection at 0x7f8f143facf8>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 31
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "image/png": "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\n",
+            "text/plain": [
+              "<Figure size 432x288 with 1 Axes>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        }
+      ]
+    }
+  ]
+}
